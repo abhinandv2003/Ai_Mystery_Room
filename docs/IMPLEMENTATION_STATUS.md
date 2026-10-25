@@ -4,7 +4,7 @@
 
 The repository already contained a partial Phase 1 MERN foundation when implementation began. It included root, client, and server package manifests; an Express health endpoint; environment validation; MongoDB connection setup; React/Vite routing; Tailwind styling; shared UI primitives; and initial landing and creation screens. The specification copy at `docs/SPEC.md` matches the root `spec.md`.
 
-No Git metadata is present in this workspace, so a change list cannot be confirmed with `git status`.
+The Phase 1–2 baseline was committed and pushed to `origin/main` as `b895e03`. Phase 3 work is in the working tree and has not yet been committed.
 
 ## Phase 0 — Repository inspection and planning
 
@@ -58,11 +58,28 @@ No Git metadata is present in this workspace, so a change list cannot be confirm
 
 ## Remaining phases
 
-- Phase 3: Implement database models, secure ownership, server-backed session persistence, and documented case APIs; replace browser-only demo persistence with these contracts.
 - Phase 4: Add Gemini generation, structured output and canonical/evidence validation, retries, and generation status.
 - Phase 5: Connect investigation tools and implement deterministic verdicts.
 - Phase 6: Complete supported visual evidence viewers and fallback assets.
 - Phase 7: Add unit, integration, end-to-end, and security tests; address critical defects.
 - Phase 8: Prepare production build, deployment configuration, health monitoring, and operations documentation.
 
-The sample-case journey is a UI fixture, not a generated or persisted user case. The creation form validates input and opens the sample; it does not send the scenario to Gemini. The demo verdict endpoint is development-only. Production case generation, user ownership, session persistence, and verdict evaluation remain unimplemented.
+The sample-case journey is a UI fixture, not a generated or persisted user case. The creation form validates input and opens the sample; it does not send the scenario to Gemini. The demo verdict endpoint is development-only. Production case generation and production verdict evaluation remain unimplemented.
+
+## Phase 3 — Data models and APIs
+
+### Completed
+
+- Added GuestSession, Mystery, and InvestigationSession Mongoose models with private-field selection, validation, timestamps, ownership/uniqueness indexes, and TTL expiry.
+- Added HttpOnly, SameSite=Lax guest cookies using cryptographically random tokens; only token hashes are stored. Guest ownership is resolved from the cookie, never from request JSON.
+- Added trusted-origin and custom-header checks for cookie-authenticated mutations.
+- Added owner-scoped case list, generation-status, case briefing, suspect, evidence index/detail, and investigation-session read/update APIs.
+- Added strict request validation, safe serializers, 404 concealment for non-owned cases, consistent API errors, and protection against editing completed sessions.
+- Added 24-hour idle expiry with renewal during the final 12 hours; TTL indexes remove expired guest records and their owned case/session records.
+- Updated API, architecture, and data-model documentation. Case creation remains Phase 4 so this phase cannot create a permanently queued case without a generation worker.
+
+### Verification
+
+- `node --check` passed for all 20 server source files.
+- Imported the Express app successfully, loading all route modules and Mongoose schemas.
+- Automated tests and database-backed endpoint checks were not run. Phase 3 case APIs require a ready Mystery record, which will be created by Phase 4 generation; no user database fixtures were inserted during this phase.

@@ -16,9 +16,15 @@ The foundation API includes `GET /api/v1/health`. It reports HTTP 503 when Mongo
 
 The Phase 2 UI includes a fixed sample case under `client/src/mocks/`. Browser local storage holds only that sample's notes, selected evidence, and post-accusation verdict. A separate development-only endpoint (`POST /api/v1/demo/sample/accusations`) evaluates the sample accusation; its answer stays server-side. The endpoint is not mounted in production and is not part of the production case service.
 
-## Planned services
+## Phase 3 ownership and persistence
 
-Later phases add case/session ownership, mystery generation and validation, evidence, and deterministic verdict services. Gemini credentials and canonical solutions remain server-side. The server must serialize only public case data before a verdict is allowed.
+The server creates a cryptographically random guest token, sends it only in an HttpOnly SameSite=Lax cookie (Secure in production), and stores only its SHA-256 hash in `guestSessions`. Private requests resolve the cookie to a guest owner; case queries include that owner ID and return the same 404 for absent and foreign cases. Cookie-authenticated mutations require the configured Origin and `X-AMR-Request: 1`.
+
+`Mystery` and `InvestigationSession` are Mongoose models with ownership references, timestamps, validation, indexes, and TTL expiry. A session expires after 24 hours without activity. Activity during the last 12 hours extends the cookie and owned data expiry by another 24 hours; TTL indexes remove expired session, case, and investigation data. One investigation session is unique per guest/case.
+
+Canonical solution, validation, owner, scenario, and internal generation fields are excluded by default and omitted again by explicit public serializers. Phase 3 adds case list/status/read, suspect/evidence read, and investigation session APIs. Case creation remains deferred to Phase 4 so no case is marked queued without a generation worker. Production accusation/verdict services remain Phase 5.
+
+The fixed sample and its development-only verdict endpoint remain isolated from production case services. Gemini credentials stay server-side.
 
 ## Configuration and startup
 

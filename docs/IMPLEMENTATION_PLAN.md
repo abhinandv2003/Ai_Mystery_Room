@@ -23,12 +23,15 @@ The repository already had most Phase 1 pieces: a React/Vite client, an Express/
 ## Decisions and risks
 
 - No product or architecture conflict was identified during inspection.
-- Guest access is the intended onboarding path, but private case access must wait for a secure server-managed ownership/session design.
+- Guest access is the onboarding path. Private case APIs now use a server-managed cookie session and owner-scoped MongoDB queries.
 - MongoDB availability is required for a healthy API; local build checks can be run independently of MongoDB.
 - Gemini model names and any optional image provider must be verified/configured when those phases are implemented. No provider secret belongs in client code.
 - The current create page is an intentionally non-submitting UI shell. It must not be presented as working generation until Phase 4 is complete.
 - The Phase 2 sample verdict endpoint is mounted only outside production. It exists only to exercise the UI while real case and accusation APIs are built in later phases.
+- Guest ownership uses an opaque HttpOnly cookie token; only its SHA-256 hash is stored. Session expiry and owned-case cleanup use TTL indexes.
+- Phase 3 intentionally does not create mystery records until Phase 4 can queue and complete generation, avoiding permanent pending cases.
+- User-owned case APIs cannot return a ready case until Phase 4 writes a validated Mystery; API behavior for malformed/foreign IDs is implemented but database-backed ownership checks were not exercised in this pass.
 
 ## Current execution boundary
 
-Phase 1 and Phase 2 are complete. The next increment is Phase 3: implement the data models and ownership/session APIs, replacing the UI fixture adapter where real case data is required. The scenario intake must remain clearly labeled as a preview until Gemini generation is implemented in Phase 4.
+Phases 1–3 are implemented. The next increment is Phase 4: build the Gemini generation job and validation pipeline, then persist only validated ready cases. The scenario intake must remain clearly labeled as a preview until that generation flow is complete.
